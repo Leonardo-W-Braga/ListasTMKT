@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulação de Telemarketing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-jQnTZ1F6ZJxhvK3I2ktqPSO6V3UTu+9uFrY5R4YUvLmDJFuRnU+UwQUWFSXgD4ZqzUEmz8JFG3Upv7EG0vN7uw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f1f5f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #1e293b;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      color: #38bdf8;
+    }
+
+    .cliente {
+      background-color: #0f172a;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #334155;
+    }
+
+    .cliente p {
+      margin: 0.3rem 0;
+    }
+
+    button {
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+      background-color: #2563eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button i {
+      transition: transform 0.3s ease;
+    }
+
+    button:hover i {
+      transform: rotate(10deg) scale(1.2);
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-cpc:hover {
+      background-color: #22c55e;
+    }
+
+    .btn-naoefetivo:hover {
+      background-color: #eab308;
+    }
+
+    .btn-blacklist:hover {
+      background-color: #ef4444;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    .mensagem-final {
+      color: #4ade80;
+      font-weight: 600;
+      margin-top: 1rem;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Atendimento de Telemarketing</h1>
+  <div class="cliente" id="cliente">
+    <p>Carregando cliente...</p>
+  </div>
+  <div id="botoes">
+    <button class="btn-cpc" onclick="tabular('Contato CPC')">
+      <i class="fas fa-phone-volume"></i> Contato CPC
+    </button>
+    <button class="btn-naoefetivo" onclick="tabular('Não efetivo')">
+      <i class="fas fa-clock"></i> Não efetivo
+    </button>
+    <button class="btn-blacklist" onclick="tabular('Solicitação de Bloqueio')">
+      <i class="fas fa-ban"></i> Solicitação de Bloqueio
+    </button>
+  </div>
+  <p id="mensagemFinal" class="mensagem-final oculto"></p>
+</div>
+
+<script>
+    let clienteAtual = null;
+
+    function carregarCliente() {
+      fetch('/cliente/proximo')
+        .then(res => res.json())
+        .then(cliente => {
+          if (cliente && cliente.mensagem) {
+            document.getElementById('cliente').innerHTML = '';
+            document.getElementById('botoes').classList.add('oculto');
+            document.getElementById('mensagemFinal').textContent = cliente.mensagem;
+            document.getElementById('mensagemFinal').classList.remove('oculto');
+            return;
+          }
+
+          clienteAtual = cliente;
+          if (!cliente) {
+            document.getElementById('cliente').innerHTML = '<p>Nenhum cliente disponível.</p>';
+          } else {
+            document.getElementById('cliente').innerHTML = `
+              <p><strong>Nome:</strong> ${cliente.nome}</p>
+              <p><strong>CPF:</strong> ${cliente.cpf}</p>
+              <p><strong>Telefone:</strong> ${cliente.telefone}</p>
+            `;
+          }
+        });
+    }
+
+    function tabular(status) {
+      if (!clienteAtual) return;
+      fetch('/cliente/tabular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cpf: clienteAtual.cpf, status })
+      }).then(res => res.text())
+        .then(msg => {
+          alert(msg);
+          carregarCliente();
+        });
+    }
+
+    carregarCliente();
+  </script>
+</body>
+</html>
